@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
@@ -20,9 +20,8 @@ def get_transcript(video_id):
         return None
 
 @app.route("/")
-def serve_frontend():
-    # Serve the main.html file from current directory
-    return send_from_directory(".", "main.html")
+def index():
+    return render_template("index.html")
 
 @app.route("/transcript", methods=["POST"])
 def transcript():
@@ -39,10 +38,8 @@ def transcript():
     if not transcript_text:
         return jsonify({"error": "Transcript not found"}), 404
 
-    return jsonify({
-        "transcript": transcript_text
-    })
+    return jsonify({"transcript": transcript_text})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use PORT env var for Render, or 5000 locally
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
