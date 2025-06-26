@@ -12,13 +12,20 @@ def extract_video_id(url):
     match = re.search(regex, url)
     return match.group(1) if match else None
 
+def get_transcript(video_id):
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        return " ".join([t['text'] for t in transcript])
+    except:
+        return None
+
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
 @app.route("/transcript", methods=["POST"])
 def transcript():
-    data = request.json
+    data = request.get_json()
     url = data.get("url")
     if not url:
         return jsonify({"error": "No URL provided"}), 400
@@ -27,14 +34,12 @@ def transcript():
     if not video_id:
         return jsonify({"error": "Invalid YouTube URL"}), 400
 
-    try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        transcript_text = " ".join([t['text'] for t in transcript])
-        return jsonify({"transcript": transcript_text})
-    except Exception as e:
-        print(f"Transcript fetch error: {e}")
-        return jsonify({"error": "Transcript not available for this video."}), 404
+    transcript_text = get_transcript(video_id)
+    if not transcript_text:
+        return jsonify({"error": "Transcript not found"}), 404
+
+    return jsonify({"transcript": transcript_text})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
