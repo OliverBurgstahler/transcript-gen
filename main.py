@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
@@ -18,6 +18,11 @@ def get_transcript(video_id):
         return " ".join([t['text'] for t in transcript])
     except:
         return None
+
+@app.route("/")
+def serve_frontend():
+    # Serve the main.html file from current directory
+    return send_from_directory(".", "main.html")
 
 @app.route("/transcript", methods=["POST"])
 def transcript():
