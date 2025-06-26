@@ -3,75 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>YouTube Transcript Viewer</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-    input, button { padding: 10px; font-size: 16px; }
-    #results { margin-top: 20px; }
-   .box {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  overflow-y: auto;
-  max-height: none;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-    .box h3 { margin-top: 0; }
-  </style>
+  <title>YouTube Transcript Fetcher</title>
 </head>
 <body>
-  <h1>YouTube Transcript Tool</h1>
-  <input type="text" id="url" placeholder="Paste YouTube video URL" size="50">
-  <button onclick="fetchTranscript()">Get Transcript</button>
-  <button onclick="downloadTranscript()" id="downloadBtn" style="display: none;">📄 Download .txt</button>
+  <h1>YouTube Transcript Generator</h1>
+  <input type="text" id="url" placeholder="Paste YouTube URL here" />
+  <button onclick="getTranscript()">Get Transcript</button>
 
-  <div id="results">
-    <div class="box">
-      <h3>Transcript</h3>
-      <div id="transcriptText">Paste a link and click the button</div>
-    </div>
-  </div>
+  <div id="result" style="white-space: pre-wrap; margin-top: 20px;"></div>
 
   <script>
-    let currentTranscript = "";
-
-    async function fetchTranscript() {
+    async function getTranscript() {
       const url = document.getElementById("url").value;
-      document.getElementById("transcriptText").innerText = "Requesting transcript...";
-      document.getElementById("downloadBtn").style.display = "none";
+      const resultDiv = document.getElementById("result");
+
+      resultDiv.textContent = "Fetching transcript...";
 
       try {
-        const response = await fetch("http://127.0.0.1:5000/transcript", {
+        const response = await fetch("/transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url })
+          body: JSON.stringify({ url }),
         });
 
         const data = await response.json();
-
-        if (data.error) {
-          document.getElementById("transcriptText").innerText = "Error: " + data.error;
+        if (data.transcript) {
+          resultDiv.textContent = data.transcript;
         } else {
-          currentTranscript = data.transcript;
-          document.getElementById("transcriptText").innerText = currentTranscript;
-          document.getElementById("downloadBtn").style.display = "inline-block";
+          resultDiv.textContent = data.error || "No transcript found.";
         }
       } catch (err) {
-        document.getElementById("transcriptText").innerText = "Error fetching transcript.";
+        resultDiv.textContent = "Error fetching transcript.";
+        console.error(err);
       }
-    }
-
-    function downloadTranscript() {
-      const blob = new Blob([currentTranscript], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "transcript.txt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
   </script>
 </body>
